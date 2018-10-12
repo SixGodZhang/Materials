@@ -300,7 +300,49 @@
 
 ### 使用lock关键字
 ---
+``` csharp
+        private static readonly object Sync = new object();
+        private static int Count = 0;
+        static void Main(string[] args)
+        {
+            Task task = Task.Run(() =>
+            {
+                Decrement();
+            });
 
+            Increment();
+            task.Wait();
+        }
+
+        static void Increment()
+        {
+            lock (Sync)
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    Thread.Sleep(100);
+                    Count++;
+                    Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId},Count={Count}");
+                }
+            }
+        }
+
+        static void Decrement()
+        {
+            lock (Sync)
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    Thread.Sleep(100);
+                    Count--;
+                    Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId},Count={Count}");
+                }
+
+                
+            }
+
+        }
+```
 ### lock对象的选择
 ---
 
