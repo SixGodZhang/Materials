@@ -1,4 +1,4 @@
-# C#中同步和异步、并行和并发
+# C#中同步和异步、并行和并发(应用实例篇)
 
 ## 目录
 - [基本概念](#基本概念)
@@ -18,6 +18,8 @@
   - [使用Monitor来同步](#使用Monitor来同步)
   - [使用lock关键字](#使用lock关键字)
   - [lock对象的选择](#lock对象的选择)
+  - [死锁](#死锁)
+- [任务调度器和同步上下文](#任务调度器和同步上下文)
 - [一些专业名称解释](#一些专业名词解释)
    
 
@@ -37,7 +39,6 @@
 ---
   两队人，进入一个门，每队每次轮流进一个，这称之为并发.  
   两队人，分别进入两个门，各进各的，这称之为并行.  
-  [图]()
 ## C#中多线程处理
 ### Thread的使用
 ---
@@ -312,7 +313,7 @@
 
             Increment();
             task.Wait();
-        }
+        } 
 
         static void Increment()
         {
@@ -336,22 +337,235 @@
                     Thread.Sleep(100);
                     Count--;
                     Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId},Count={Count}");
-                }
-
-                
+                }   
             }
 
         }
 ```
-### lock对象的选择
+### lock对象的选择（同步对象）
 ---
+1.lock(this) 一般不建议这种,这种锁定用于锁定一个实例对象。只有基于当前实例对象的线程才会被同步
+
+``` csharp
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            LockTest test = new LockTest();
+
+            //正确lock(this)示范
+            Thread th = new Thread(test.LockMethod);
+            Thread th1 = new Thread(test.LockMethod);
+
+            th.Start();
+            th1.Start();
+
+            th.Join();
+            th1.Join();
+
+            //使用this产生的矛盾点
+
+            LockTest test1 = new LockTest();
+            Thread th2 = new Thread(test.LockMethod);
+            Thread th3 = new Thread(test1.LockMethod);
+
+            th2.Start();
+            th3.Start();
+
+            th2.Join();
+            th3.Join();
+
+        }
+    }
+
+    public class LockTest
+    {
+        public void LockMethod()
+        {
+            lock (this)
+            {
+                Console.WriteLine($"thread ID: " + Thread.CurrentThread.ManagedThreadId + "sleep 5000 ms");
+                Thread.Sleep(5000);
+                Console.WriteLine($"thread ID: " + Thread.CurrentThread.ManagedThreadId + "Awake");
+            }
+        }
+    }
+
+    //thread ID: 3sleep 5000 ms
+    //thread ID: 3Awake
+    //thread ID: 4sleep 5000 ms
+    //thread ID: 4Awake
+    //thread ID: 5sleep 5000 ms
+    //thread ID: 6sleep 5000 ms
+    //thread ID: 5Awake
+    //thread ID: 6Awake
+```
+
+2.lock(type) 一般不建议这种,这种锁定用于锁定类型.只要线程调用方法时，没有获取该种类型的锁，则会被阻塞.且此种锁定，该类型
+``` csharp
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Thread th = new Thread(ALockMethod);
+            Thread th1 = new Thread(BLockMethod);
+
+            th.Start();
+            th1.Start();
+
+            th.Join();
+            th1.Join();
+        }
+
+        public static void ALockMethod()
+        {
+            lock (typeof(LockTest))
+            {
+                System.Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId} sleep 2000ms A ");
+                Thread.Sleep(2000);
+                System.Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId} Awake");
+            }
+        }
+
+        public static void BLockMethod()
+        {
+            lock (typeof(LockTest))
+            {
+                System.Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId} sleep 2000ms B ");
+                Thread.Sleep(2000);
+                System.Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId} Awake");
+            }
+        }
+    }
+
+    class LockTest
+    {
+
+    }
+```
+
+3.lock(object) 推荐使用,锁 私有静态object 。 此种不局限于实例对象，不局限于类型，可以锁 想要锁定的部分.示例代码参考死锁.
+
+### 死锁
+---
+注意:如果某一个线程上抛出异常,锁是会被释放的
+1.因相互等待锁的释放而陷入死锁
+``` csharp
+        private static readonly object Sync = new object();
+        private static readonly object Sync_1 = new object();
+        static void Main(string[] args)
+        {
+            Thread th = new Thread(ALockMethod);
+            Thread th1 = new Thread(BLockMethod);
+
+            th.Start();
+            th1.Start();
+
+            th.Join();
+            th1.Join();
+            Console.WriteLine("end...");
+        }
+
+        public static void ALockMethod()
+        {
+            lock (Sync)
+            {
+                Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId} call ALockMethod");
+                BLockMethod();
+            }
+        }
+
+        public static void BLockMethod()
+        {
+            lock (Sync_1)
+            {
+                Console.WriteLine($"thread ID: {Thread.CurrentThread.ManagedThreadId} call BLockMethod");
+                ALockMethod();
+            }
+        }
+```
+
+## 任务调度器和同步上下文
+---
+任务调度器 是为线程高效分配工作时所扮演的角色,可以将任务分配给合适的线程. 在C#中 是 System.Threading.Tasks.TaskScheduler 的实例.  
+FCL提供了两个派生自TaskScheduler的任务调度器:线程池任务调度器和同步上下文调度器.其中,同步上下文通常应用于图形界面，将任务调度给GUI线程.而在控制台应用程序中,默认使用线程池调度任务，决定安全有效的执行他们-何时重用、何时进行资源清理和何时创建额外的线程.  
+
+控制台应用程序中TaskScheduler和SynchronizationContext
+``` csharp
+        static void Main(string[] args)
+        {
+            Console.WriteLine(TaskScheduler.Default);
+            Console.WriteLine(TaskScheduler.Current);
+
+            //output
+            //System.Threading.Tasks.ThreadPoolTaskScheduler
+            //System.Threading.Tasks.ThreadPoolTaskScheduler
+
+            Console.WriteLine(SynchronizationContext.Current==null);
+            //output
+            //true
+        }
+```
+
+WPF 中演示同步上下文.只有在延续任务中才能更新UI，在task中更新UI会抛出异常
+``` csharp
+   public partial class MainWindow : Window
+    {
+        private readonly TaskScheduler taskScheduler;
+        private CancellationTokenSource cancellationTokenSource;
+        public MainWindow()
+        {
+            taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            InitializeComponent();
+            label1.Content = "initialize text";
+            cancellationTokenSource = new CancellationTokenSource();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Task task = Task.Run(() => {
+                //while (!cancellationTokenSource.Token.IsCancellationRequested)
+                //{
+
+                //}
+                //label1.Content = "excuting task";
+                Thread.Sleep(2000);
+
+            }, cancellationTokenSource.Token);
+
+            Task taskA = task.ContinueWith((preTask) =>
+            {
+                Trace.Assert(preTask.IsCompleted);
+                label1.Content = "Task Completion...";
+            },CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion,taskScheduler);
+
+
+            Task taskB = task.ContinueWith((preTask) =>
+            {
+                Trace.Assert(preTask.IsCanceled);
+                label1.Content = "Task Canceled...";
+            }, CancellationToken.None, TaskContinuationOptions.OnlyOnCanceled, taskScheduler);
+
+            Task taskC = task.ContinueWith((preTask) =>
+            {
+                Trace.Assert(preTask.IsFaulted);
+
+                label1.Content = "Task Faulted...";
+            }, CancellationToken.None,TaskContinuationOptions.OnlyOnFaulted, taskScheduler);
+
+        }
+    }
+```
+
+从TaskScheduler派生出新类型，可以创建自己的任务调度器，从而对任务调度做出不同的选择.可以使用静态方法FromCurrentSynchronizationContext()将任务调度给当前线程(更确切地说，调度给当前线程关联的同步上下文).  
 
 ## 一些专业名词解释
 ---
-TPL: Task Parallel Library 任务并行库
-TAP: Task-based Asynchronous Pattern 基于任务的异步模式
-前台线程/后台线程:进程必须等待所有的前台进行执行完毕才能退出，而无需等待后台进程执行完毕.
-任务原子性:任务执行的最小单位。如果是数据的话，和系统位数相关。比如64位操作系统，可以完整的读取long,但是在读取decimal(128位)时，可能被中断
+**TPL**: Task Parallel Library 任务并行库  
+**TAP**: Task-based Asynchronous Pattern 基于任务的异步模式  
+**前台线程/后台线程**:进程必须等待所有的前台进行执行完毕才能退出，而无需等待后台进程执行完毕.  
+**任务原子性**:任务执行的最小单位。如果是数据的话，和系统位数相关。比如64位操作系统，可以完整的读取long,但是在读取decimal(128位)时，可能被中断  
+**FCL**: Framework Class Library
 
 
                 
