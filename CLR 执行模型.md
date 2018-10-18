@@ -65,7 +65,30 @@ Microsoft SDKs提供了clrver.exe可以查看CLR的版本号,-all 参数可以�
 
 注意:高级语言一般只公开了CLR的部分功能,IL可以操作CLR的全部功能.
 
+在运行时，会将IL代码转换成本机CPU指令.这部分功能事由CLR中的JIT(just in time) 来完成的.
 ![第一次调用方法](https://github.com/SixGodZhang/Materials/blob/master/Images/ExcuteProcess.png)
+
+描述(以调用Main方法举例):在调用Main方法之前,会检查Main方法中引用的所有类型.这导致CLR分配一个内部数据结构来管理对引用类型的访问.
+如上,在Main中调用Console类型,CLR就会分配一个数据结构来管理对Console的访问,Console类型中的每一个方法都有对应的记录项,每个记录项中都包含了
+一个对应的地址,根据该地址，可以找到方法的实现.对这个结构初始化的时候,CLR将每个记录项中对应的地址都指向一个未编档的函数。该函数被称为,JITCompiler,
+JITCompiler负责将IL代码编译成本机CPU指令.JITCompiler会在定义的程序集中根据元数据查找对应的IL代码,接着JIT会验证IL代码，并将IL代码编译为本机CPU指令.
+本机CPU指令会被保存在动态分配的内存中,然后JITCompiler会将Console中对应的记录项指向在动态内存中的本机CPU指令.第二次调用可以直接取记录项对应的本机CPU指令,
+而不会再调用JITCompiler.
+
+注意:CLR中的JIT还会对本机代码进行优化.
+两个C#编译器开关会影响代码优化:
+- /optimize
+- /debug
+
+![优化后的IL代码](https://github.com/SixGodZhang/Materials/blob/master/Images/optimize.png)
+
+![未优化的IL代码](https://github.com/SixGodZhang/Materials/blob/master/Images/no-optimize.png)
+
+optimize 控制是否优化 IL代码,debug 控制是否优化 本机CPU指令.
+
+/optimize-:此命令不会优化 IL代码.在未优化的IL代码中,包含很多NOP(no-operation空指令),还包含许多跳转到下一行代码的分支指令.Visual Studio利用这些指令在
+调试期间提供"编辑并继续的功能".
+
 
 ## 本机代码生成器:NGen.exe
 ---
