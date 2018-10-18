@@ -63,7 +63,7 @@ Microsoft SDKs提供了clrver.exe可以查看CLR的版本号,-all 参数可以�
 注意:高级语言一般只公开了CLR的部分功能,IL可以操作CLR的全部功能.
 
 在运行时，会将IL代码转换成本机CPU指令.这部分功能事由CLR中的JIT(just in time) 来完成的.
-![第一次调用方法](https://github.com/SixGodZhang/Materials/blob/master/Images/ExcuteProcess.png)
+![第一次调用方法](https://github.com/SixGodZhang/Materials/blob/master/Images/firstcallmethod.png)
 
 描述(以调用Main方法举例):在调用Main方法之前,会检查Main方法中引用的所有类型.这导致CLR分配一个内部数据结构来管理对引用类型的访问.
 如上,在Main中调用Console类型,CLR就会分配一个数据结构来管理对Console的访问,Console类型中的每一个方法都有对应的记录项,每个记录项中都包含了
