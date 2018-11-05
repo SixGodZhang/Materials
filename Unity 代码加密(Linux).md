@@ -4,14 +4,14 @@
 - 防止游戏被反编译，造成利益损害
 
 ## 思路概括
-热更代码: hotfix code
-主工程代码: trunk code = Assembly-CSharp.dll
+热更代码: hotfix code  
+主工程代码: trunk code = Assembly-CSharp.dll  
 
-一般做热更的游戏项目分为两部分代码,所以加密我们需要对这两部分加密.
-其中,hotfix code 和 trunk code 可以分别用不同的加密的算法
+一般做热更的游戏项目分为两部分代码,所以加密我们需要对这两部分加密.  
+其中,hotfix code 和 trunk code 可以分别用不同的加密的算法  
 
-主要就是先对hotfix code 进行加密,然后在trunk code 中进行解密,然后我们在把 trunk Code加密,在mono 中进行解密,这样一来，必须破解了mono才能看到
-trunk code中对hotfix code的解密过程,最后才能去解密 hotfix code。这种 加密 方式,我相信一般的项目是够用了.
+主要就是先对hotfix code 进行加密,然后在trunk code 中进行解密,然后我们在把 trunk Code加密,在mono 中进行解密,这样一来，必须破解了mono才能看到  
+trunk code中对hotfix code的解密过程,最后才能去解密 hotfix code。这种 加密 方式,我相信一般的项目是够用了.  
 
 ## 具体步骤
 
@@ -35,7 +35,7 @@ Window APK方面:
 1. VM 安装
 官网下载,32、64 位均可,64位需要多安装两个工具( 过程略 )
 
-2. Ubuntu 安装
+2. Ubuntu 安装  
 官网下载即可
 
 3. Ubuntu 下的工具安装
@@ -79,58 +79,58 @@ for example:
 or:
 - sudo apt-get install git autoconf automake bison libtool libc6-dev-i386 lib32z1 libwww-perl
 
-注意:
-libwww-perl 可以解决调用perl命令的问题,同时在第一次执行build_runtime_android.sh,可以自动安装NDK
-lib32stdc++6 可以解决缺少libstdc++.so.6问题
+注意:  
+libwww-perl 可以解决调用perl命令的问题,同时在第一次执行build_runtime_android.sh,可以自动安装NDK  
+lib32stdc++6 可以解决缺少libstdc++.so.6问题  
 
-下载Mono源码:
-下载mono的压缩包(速度较快):
-这里以Unity4.7.2作为参考,首先在Unity 在Github的官方账号上找到Mono项目:[Unity mono](https://github.com/Unity-Technologies/mono)
-在分支上搜索Unity4.7,如果没有找到，则搜索前一个版本的分支，比如Unity4.6.原因: Unity mono如果没有做大的变动的话，依然使用的是前一个版本的mono
-![搜索mono分支](https://github.com/SixGodZhang/Materials/blob/master/Images/findmonobranch.png)
-直接下载mono unity-4.6分支的工程:
-git clone -b unity-4.6 https://github.com/Unity-Technologies/mono.git
+下载Mono源码:  
+下载mono的压缩包(速度较快):  
+这里以Unity4.7.2作为参考,首先在Unity 在Github的官方账号上找到Mono项目:[Unity mono](https://github.com/Unity-Technologies/mono)  
+在分支上搜索Unity4.7,如果没有找到，则搜索前一个版本的分支，比如Unity4.6.原因: Unity mono如果没有做大的变动的话，依然使用的是前一个版本的mono  
+![搜索mono分支](https://github.com/SixGodZhang/Materials/blob/master/Images/findmonobranch.png)  
+直接下载mono unity-4.6分支的工程:  
+git clone -b unity-4.6 https://github.com/Unity-Technologies/mono.git  
 
-配置NDK环境:
-把 mono/external/buildscripts 下的所有批处理脚本移动到mono目录下(注意: 不同分支的这些批处理脚本存放的位置可能不一样)
-修改build_runtime_android.sh：
-BUILDSCRIPTSDIR=external/buildscripts 因为我们将脚本移动到了mono目录下,所以删掉这个变量,并且与之相关的所有引用都修改一下
+配置NDK环境:  
+把 mono/external/buildscripts 下的所有批处理脚本移动到mono目录下(注意: 不同分支的这些批处理脚本存放的位置可能不一样)  
+修改build_runtime_android.sh：  
+BUILDSCRIPTSDIR=external/buildscripts 因为我们将脚本移动到了mono目录下,所以删掉这个变量,并且与之相关的所有引用都修改一下  
 
 
-执行一次build_runtime_android.sh之后,
-修改mono/external/android_krait_signal_handler/build.pl:
-修改第一行#!/usr/bin/env perl -w为#!/usr/bin/perl -w (再不行 就删除 #!/usr/bin/env perl -w)
-r16b 改为 r10e
+执行一次build_runtime_android.sh之后,  
+修改mono/external/android_krait_signal_handler/build.pl:  
+修改第一行#!/usr/bin/env perl -w为#!/usr/bin/perl -w (再不行 就删除 #!/usr/bin/env perl -w)  
+r16b 改为 r10e  
 
-注意:
-configure: error: C compiler cannot create executables
-android_krait_signal_handler 和 安装的gcc 版本不一致,缺少
-sudo apt-get install lib32ncurses5 lib32z1
+注意:  
+configure: error: C compiler cannot create executables  
+android_krait_signal_handler 和 安装的gcc 版本不一致,缺少  
+sudo apt-get install lib32ncurses5 lib32z1  
 
-修改环境变量:sudo gedit ~/.bashrc
-NDK_ROOT=/home/xxxx/xxxx/android-ndk-r10e   
-NDK=$NDK_ROOT
-ANDROID_NDK_ROOT=$NDK_ROOT
-export NDK_ROOT NDK ANDROID_NDK_ROOT
-使环境变量生效:source ~/.bashrc
-测试: echo $ANDROID_NDK_ROOT
+修改环境变量:sudo gedit ~/.bashrc  
+NDK_ROOT=/home/xxxx/xxxx/android-ndk-r10e    
+NDK=$NDK_ROOT  
+ANDROID_NDK_ROOT=$NDK_ROOT  
+export NDK_ROOT NDK ANDROID_NDK_ROOT  
+使环境变量生效:source ~/.bashrc  
+测试: echo $ANDROID_NDK_ROOT  
 
-再次在mono目录下执行:build_runtime_android.sh
-即可成功,在/builds/embedruntimes 下面会生成不同cpu架构的libmono.so
+再次在mono目录下执行:build_runtime_android.sh  
+即可成功,在/builds/embedruntimes 下面会生成不同cpu架构的libmono.so  
 
-优化:
-build_runtime_android.sh
-注释151和152行,可以加快编译速度:
+优化:  
+build_runtime_android.sh  
+注释151和152行,可以加快编译速度:  
 151 # clean_build "$CCFLAGS_ARMv5_CPU" "$LDFLAGS_ARMv5" "$OUTDIR/armv5"                                                                  
-152 # clean_build "$CCFLAGS_ARMv6_VFP" "$LDFLAGS_ARMv5" "$OUTDIR/armv6_vfp"
+152 # clean_build "$CCFLAGS_ARMv6_VFP" "$LDFLAGS_ARMv5" "$OUTDIR/armv6_vfp"  
 
-编译release版本mono:
- -fpic -g -funwind-tables \  改为 -fpic -O2 -funwind-tables \ 
+编译release版本mono:   
+ -fpic -g -funwind-tables \  改为 -fpic -O2 -funwind-tables \   
 
-mono加密过程:
-mono加载Assembly-CSharp.dll是在mono/mono/metadata/image.c中的mono_image_open_from_data_with_name中进行的
-所以,我们的解密过程就在此处.
-我引用的加密算法是xxtea,参考地址:[xxtea](https://github.com/xxtea/xxtea-dotnet)
+mono加密过程:  
+mono加载Assembly-CSharp.dll是在mono/mono/metadata/image.c中的mono_image_open_from_data_with_name中进行的  
+所以,我们的解密过程就在此处.  
+我引用的加密算法是xxtea,参考地址:[xxtea](https://github.com/xxtea/xxtea-dotnet)  
 1. 将xxtea.h 和 xxtea.c 放入mono/mono/metadata文件夹下,然后打开Makefile.am文件
 2. 在libmonoruntime_la_SOURCES中添加xxtea.c ,在 libmonoruntimeinclude_HEADERS 中添加xxtea.h
 3. 打开image.c,添加头文件引用: #include <mono/metadata/xxtea.h>
@@ -153,20 +153,20 @@ mono加载Assembly-CSharp.dll是在mono/mono/metadata/image.c中的mono_image_op
 ```
 
 ## Window APK 方面
-Android 工具包:
+Android 工具包:  
 APK 反编译、打包工具,签名工具....
 下载地址:[Android工具包](https://github.com/SixGodZhang/AndroidTools)
 
-DLL反编译工具:
+DLL反编译工具:  
 下载地址:[dnspy](https://github.com/0xd4d/dnSpy)
 
-加密过程:
+加密过程:  
 首先拿到APK,然后对APK反解,在Managed文件夹下可以找到Assembly-CSharp.dll，然后用xxtea提供的接口对
 Assembly-CSharp.dll进行加密,替换掉Managed文件夹下的；然后用编译出来的带解密功能的libmono.so文件
 替换掉反解包中lib目录下的不同cpu架构的libmono.so文件.然后打包apk,进行签名即可
 
 
-##参考博客
+## 参考博客
 1. https://blog.csdn.net/KiTok/article/details/72472142
 2. https://blog.csdn.net/qq_27772057/article/details/51945700
 3. https://blog.csdn.net/u011643833/article/details/47261015

@@ -12,4 +12,4 @@ get-help NuGet 帮助
     Add-BindingRedirect
     Get-Project
     Open-PackagePage
-    Register-TabExpansion
+    Register-TabExpansion 
