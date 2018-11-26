@@ -53,7 +53,7 @@ string str = string.Format("{0},{1},{2}", "test", 112, DateTime.Now);
 
 执行过程:
 string中的format最终会调到StringBuilder中AppendFormat方法.如果在string.Format中不指定IFormatProvider的实例对象的话,则会采用
-当前线程上的Thread.CurrentThread.CurrentCulture作为默认值.在.NetFramework中有三个雷实现了IFormatProvider接口,分别为CultureInfo、
+当前线程上的Thread.CurrentThread.CurrentCulture作为默认值.在.NetFramework中有三个类实现了IFormatProvider接口,分别为CultureInfo、
 NumberFormatInfo、DatetimeFormatInfo。
 
 在调用到StringBuilder上的AppendFormat方法时，首先会调用IFormatProvider.GetFormat判断是否实现了ICustomFormatter，如果没有，则会调用
@@ -203,4 +203,52 @@ public class AcctNumberFormat : IFormatProvider, ICustomFormatter
             return String.Empty;
     }
 }
+```
+
+__继承实现IFormattable接口，实现自定义格式化__
+``` csharp
+using System;
+using System.Globalization;
+
+
+internal class A:IFormattable
+{
+    public string name;
+    public int id;
+
+    public A(string name, int id)
+    {
+        this.name = name;
+        this.id = id;
+    }
+
+    public override string ToString()
+    {
+        return base.ToString();
+    }
+
+    public string ToString(string format, IFormatProvider formatProvider)
+    {
+        string result = null;
+
+        string ft = format.ToUpper(CultureInfo.InvariantCulture);
+        if (ft == "A")
+            result = "{id: " + id + ", name: " + name + "}";
+        else
+            result = ToString();
+
+        return result;
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        A a = new A("zhangsan", 123);
+        Console.WriteLine(string.Format("{0:A}",a));
+        Console.WriteLine(string.Format("{0:B}",a));
+    }
+}
+
 ```

@@ -59,3 +59,9 @@ namespace DelegateDemo
         int result = ci.Compare(a, b, CompareOptions.IgnoreSymbols);
         Console.WriteLine(result);
 ```
+
+6.C#邪门用法 
+``` csharp
+A.Test("hello", id: out int id);
+int.TryParse("123", result: out int result);
+```
