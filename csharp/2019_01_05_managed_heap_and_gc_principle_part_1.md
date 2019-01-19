@@ -47,7 +47,7 @@ GC(Garbage Collection)， 主要作用是 __帮助开发者自动管理应用程
 4．摧毁资源的状态以进行清理(可选，目前未找到实例验证)；  
 5．释放内存．
 
-![分配内存](2019_01_05_managed_heap_and_gc_principle_images\2019_01_05_newobj.png)
+![分配内存](2019_01_05_managed_heap_and_gc_principle_images/2019_01_05_newobj.png)
 
 从IL上看，分配内存和初始化是一条语句，因此下面将这两个操作合并．
 简化之后的流程可以概述为：__分配 & 初始化->使用->释放__
@@ -58,7 +58,7 @@ GC(Garbage Collection)， 主要作用是 __帮助开发者自动管理应用程
 3．CLR检查Managed Heap中是否有足够的空间容纳实例对象所需要的字节数，若有，则分配，反之，则触发GC进行回收．  
 
 如下图：我们可以发现fs对象中的字占用了228个字节．
-![](2019_01_05_managed_heap_and_gc_principle_images\2019_01_05_fs.png)
+![](2019_01_05_managed_heap_and_gc_principle_images/2019_01_05_fs.png)
 
 如果仔细验证分配规则，如下：
 ``` csharp
