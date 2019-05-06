@@ -3,6 +3,8 @@
 ## 目录
 - [前言](#前言)
 - [解压](#解压)
+- [队列](#队列)
+- [堆队列](#堆队列)
 
 ## 前言
 《python3-CookBook》是基于python3的,有些语法并不适用于python2,但是其提供的大多数语法技巧还是值得的学习与参考的.  
@@ -36,6 +38,44 @@ test_unzip_method(1,2,3,4,name='zhang',id = 1223)
 (1, 2, 3, 4)
 {'name': 'zhang', 'id': 1223}
 ``` 
+## 队列
+队列是一种先进先出(FIFO)的数据结构,主要介绍了在Python中关于collectiond.deque的用法:  
+**定义:**
+``` python
+class collections.deque([iterable[, maxlen]]) 
+```
+**保留最后N个元素:**
+``` python
+from collections import deque
+
+def search(lines, pattern, history=5):
+    previous_lines = deque(maxlen=history)
+    for line in lines:
+        if pattern in line:
+            yield line, previous_lines
+        previous_lines.append(line)
+
+# Example use on a file
+if __name__ == '__main__':
+    with open(r'../../cookbook/somefile.txt') as f:
+        for line, prevlines in search(f, 'python', 5):
+            for pline in prevlines:
+                print("pre 5 lines: " + pline)
+            print("line: " + line)
+            print('-' * 20)
+```
+
+## 堆队列
+堆队列,也称之为优先级队列.是一种基于数组和二叉树的数据结构.用法如下:
+``` python
+heap = []            # creates an empty heap
+heappush(heap, item) # pushes a new item on the heap
+item = heappop(heap) # pops the smallest item from the heap
+item = heap[0]       # smallest item on the heap without popping it
+heapify(x)           # transforms list into a heap, in-place, in linear time
+item = heapreplace(heap, item) # pops and returns smallest item, and adds
+                               # new item; the heap size is unchanged
+```
 
 
 
