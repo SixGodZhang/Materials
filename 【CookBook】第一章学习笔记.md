@@ -7,6 +7,9 @@
 - [带优先级的元组](#带优先级的元组)
 - [堆队列](#堆队列)
 - [字典](#字典)
+- [命名切片](#命名切片)
+- [自定义类型的排序](#自定义类型的排序)
+- [过滤序列元素](#过滤序列元素)
 
 ## 前言
 《python3-CookBook》是基于python3的,有些语法并不适用于python2,但是其提供的大多数语法技巧还是值得的学习与参考的.  
@@ -239,18 +242,112 @@ max_price = max(zip(prices.values(),prices.keys()))
 print(max_price)
 prices_sorted = sorted(zip(prices.values(),prices.keys()))
 print(prices_sorted)
+```  
+
+如果待排序的是一个字典列表,那还可以通过使用operator模块的itemgetter函数来进行排序:
+``` python
+from operator import itemgetter
+
+rows = [
+    {'fname': 'Brian', 'lname': 'Jones', 'uid': 1003},
+    {'fname': 'David', 'lname': 'Beazley', 'uid': 1002},
+    {'fname': 'John', 'lname': 'Cleese', 'uid': 1001},
+    {'fname': 'Big', 'lname': 'Jones', 'uid': 1004}
+]
+
+from operator import itemgetter
+rows_by_fname = sorted(rows, key=itemgetter('fname'))
+rows_by_uid = sorted(rows, key=itemgetter('uid'))
+print(rows_by_fname)
+print(rows_by_uid)
 ``` 
 
-
-
-
-
-
-
-
-
-
-
+## 命名切片
+在某些情景下，我们需要获取序列中某一个特定序列的内容,一般是直接将数据写死,也就是硬编码:
 ``` python
+record = '....................100 .......513.25 ..........'
+cost = int(record[20:23]) * float(record[31:37])
+
+print(str(cost))
+``` 
+这种写法既不友好，也不美观. 为了解决这个问题, 我们可以采用Python内置的slice()函数:
+``` python
+SHARES = slice(20, 23)
+PRICE = slice(31, 37)
+cost = int(record[SHARES]) * float(record[PRICE])
+``` 
+
+## 自定义类型的排序
+时常会遇到对自定义类型的排序操作,最常用的操作如下:
+``` python
+class User:
+    def __init__(self, user_id):
+        self.user_id = user_id
+
+    def __repr__(self):
+        return 'User({})'.format(self.user_id)
+		
+users = [User(23), User(3), User(99)]
+print(users)
+print(sorted(users, key=lambda u: u.user_id))
+``` 
+
+另外一种方式:
+``` python
+from operator import attrgetter
+
+class User:
+    def __init__(self, user_id):
+        self.user_id = user_id
+
+    def __repr__(self):
+        return 'User({})'.format(self.user_id)
+		
+users = [User(23), User(3), User(99)]
+print(users)
+print(sorted(users, key=attrgetter('user_id')))
+
+
+``` 
+
+## 过滤序列元素
+所谓过滤序列元素, 就是对一组数据进行筛选, 筛选出符合自己要求的元素. 有以下几种做法:
+
+**普通做法:**
+``` python
+mylist = [1, 4, -5, 10, -7, 2, 3, -1]
+print([n for n in mylist if n > 0])
+``` 
+
+**过滤器做法:**
+``` python
+mylist = [1, 4, -5, 10, -7, 2, 3, -1]
+
+def meetMyNeed(val):
+	return val > 0
+	
+print(list(filter(meetMyNeed,mylist)))
+``` 
+
+在过滤序列元素的时候,有一种特殊的情况:有两个序列,需要根据第二个序列来过滤第一个序列.简而言之,这两个序列是一个映射关系,
+根据第二个序列的值是否符合要求来筛选第一个序列.  
+具体做法就是根据第二个序列来创建筛子,然后去过滤第一个序列即可.
+``` python
+from itertools import compress
+
+addresses = [
+    '5412 N CLARK',
+    '5148 N CLARK',
+    '5800 E 58TH',
+    '2122 N CLARK',
+    '5645 N RAVENSWOOD',
+    '1060 W ADDISON',
+    '4801 N BROADWAY',
+    '1039 W GRANVILLE',
+]
+counts = [ 0, 3, 10, 4, 1, 7, 6, 1]
+more5 = [n > 5 for n in counts]
+
+print(list(compress(addresses, more5)))
 ``` 
 
